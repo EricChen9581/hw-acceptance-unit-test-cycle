@@ -1,5 +1,6 @@
+require 'rails_helper'
 require 'spec_helper'
-require 'rails_helper.rb'
+
 describe MoviesController do
 	describe 'find movies with same director' do
 		it 'should call the model method that finds movies with same director' do
@@ -30,6 +31,47 @@ describe MoviesController do
       Movie.stub(:find_with_same_director).and_return([fake_movie, nil, true])
       get :similar, {:id => 1}
       flash[:notice].should eq("'#{fake_movie.title}' has no director info")
+    end
+  end
+  describe 'render index' do
+    it 'render index' do
+      get :index
+      expect(response).to render_template("index")
+    end
+  end
+  describe 'create movie' do
+    it 'should get a success message' do
+      fake_movie = double('Movie', :title => 'Aladdin')
+      Movie.stub(:create!).and_return(fake_movie)
+      post :create, { :movie => { :title => "Aladdin" } }
+      #expect(response.content_type).to eq "text/html"
+      flash[:notice].should eq("#{fake_movie.title} was successfully created.")
+    end
+  end
+  describe 'update movie' do
+    it 'should get a success message' do
+      fake_movie = Movie.create(:title => 'a' ,:director => 'Aladdin')
+      fake_id=fake_movie.id
+      fake_title='Not Aladdin'
+      put :update, { :id => fake_id, :movie => {:title => fake_title} }
+      #expect(response.content_type).to eq "text/html"
+      flash[:notice].should eq("#{fake_title} was successfully updated.")
+    end
+  end
+  describe 'delete movie' do
+    it 'should get a success message' do
+      fake_movie = Movie.create(:title => 'a' ,:director => 'Aladdin')
+      fake_id=fake_movie.id
+      put :destroy, { :id => fake_id }
+      #expect(response.content_type).to eq "text/html"
+      flash[:notice].should eq("Movie '#{fake_movie.title}' deleted.")
+    end
+  end
+  
+  describe 'sort by title' do
+    it 'should be in home page when sorted' do
+      get :index, {:sort => 'title', :ratings => ['R']}
+      response.should redirect_to movies_path(:sort => 'title', :ratings => ['R'])
     end
   end
 end
